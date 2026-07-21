@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Pedidos de Insumos - Hyster</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        h1 { text-align: center; color: #1e293b; margin-bottom: 20px; }
+        
+        .container { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 320px; }
+        
+        h2 { border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; font-size: 1.2rem; color: #0f172a; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; }
+        select:disabled, input:readonly { background-color: #f1f5f9; cursor: not-allowed; color: #94a3b8; }
+        
+        button { cursor: pointer; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; transition: 0.2s; }
+        .btn-primary { background-color: #2563eb; color: white; width: 100%; font-size: 1rem; margin-top: 10px; }
+        .btn-primary:hover { background-color: #1d4ed8; }
+        .btn-accept { background-color: #eab308; color: white; }
+        .btn-accept:hover { background-color: #ca8a04; }
+        .btn-complete { background-color: #16a34a; color: white; }
+        .btn-complete:hover { background-color: #15803d; }
+        .btn-clear { background-color: #ef4444; color: white; margin-top: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.88rem; }
+        th { background-color: #f8fafc; color: #475569; }
+        
+        /* Cores de Alerta por Tempo de Espera */
+        .tempo-normal { background-color: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .tempo-atencao { background-color: #fef08a; color: #854d0e; padding: 3px 8px; border-radius: 4px; font-weight: bold; } /* > 5 min */
+        .tempo-critico { background-color: #fecaca; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-weight: bold; } /* > 10 min */
+        
+        .badge-status { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; text-transform: uppercase; }
+        .status-pendente { background-color: #fee2e2; color: #991b1b; }
+        .status-atendimento { background-color: #fef3c7; color: #92400e; }
+        .status-ok { background-color: #d1fae5; color: #065f46; }
+    </style>
+</head>
+<body>
+
+    <h1>🚚 Controle de Insumos - HYSTER</h1>
+
+    <div class="container">
+        <!-- FORMULÁRIO DE SOLICITAÇÃO (TL) -->
+        <div class="card">
+            <h2>📝 Solicitação de Insumo (TL)</h2>
+            <form id="formPedido">
+                <div class="form-group">
+                    <label for="equipamento">Equipamento / Linha</label>
+                    <select id="equipamento" required>
+                        <option value="">Selecione O Equipamento</option>
+                        <option value="TL1">TL1</option>
+                        <option value="TL5">TL5</option>
+                        <option value="TL6">TL6</option>
+                        <option value="TL9">TL9</option>
+                        <option value="AP2">AP2</option>
+                        <option value="EB3">EB3</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="insumo">Insumo</label>
+                    <select id="insumo" required onchange="gerenciarCamposCamposDinamicos()">
+                        <option value="">Selecione...</option>
+                        <option value="CINTA VERDE CINTAR">CINTA VERDE CINTAR</option>
+                        <option value="PAPEL">PAPEL</option>
+                        <option value="LUVA">LUVA</option>
+                        <option value="SELO 19MM">SELO 19MM</option>
+                        <option value="PAPELÃO">PAPELÃO</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="medida">Medida do Papel</label>
+                    <select id="medida" disabled>
+                        <option value="N/A">N/A (Disponível apenas para Papel)</option>
+                        <option value="100 mm">100 mm</option>
+                        <option value="150 mm">150 mm</option>
+                        <option value="180 mm">180 mm</option>
+                        <option value="210 mm">210 mm</option>
+                        <option value="250 mm">250 mm</option>
+                        <option value="280 mm">280 mm</option>
+                        <option value="310 mm">310 mm</option>
+                        <option value="350 mm">350 mm</option>
+                        <option value="380 mm">380 mm</option>
+                        <option value="410 mm">410 mm</option>
+                        <option value="450 mm">450 mm</option>
+                        <option value="480 mm">480 mm</option>
+                        <option value="510 mm">510 mm</option>
+                        <option value="540 mm">540 mm</option>
+                        <option value="570 mm">570 mm</option>
+                        <option value="590 mm">590 mm</option>
+                        <option value="600 mm">600 mm</option>
+                        <option value="620 mm">620 mm</option>
+                        <option value="635 mm">635 mm</option>
+                        <option value="650 mm">650 mm</option>
+                        <option value="680 mm">680 mm</option>
+                        <option value="700 mm">700 mm</option>
+                        <option value="740 mm">740 mm</option>
+                        <option value="780 mm">780 mm</option>
+                        <option value="800 mm">800 mm</option>
+                        <option value="825 mm">825 mm</option>
+                        <option value="840 mm">840 mm</option>
+                        <option value="870 mm">870 mm</option>
+                        <option value="900 mm">900 mm</option>
+                        <option value="930 mm">930 mm</option>
+                        <option value="990 mm">990 mm</option>
+                        <option value="1030 mm">1030 mm</option>
+                        <option value="1050 mm">1050 mm</option>
+                        <option value="1190 mm">1190 mm</option>
+                        <option value="1240 mm">1240 mm</option>
+                        <option value="1270 mm">1270 mm</option>
+                        <option value="1290 mm">1290 mm</option>
+                        <option value="1300 mm">1300 mm</option>
+                        <option value="1500 mm">1500 mm</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="diametro">Diâmetro da Luva</label>
+                    <select id="diametro" disabled>
+                        <option value="N/A">N/A (Disponível apenas para Luva)</option>
+                        <option value="503-200">503 - 200mm</option>
+                        <option value="503-200">503 - 200mm</option>
+                        <option value="503-300">503 - 300mm</option>
+                        <option value="602-200">602 - 200mm</option>
+                        <option value="602-300">602 - 300mm</option>
+                        <option value="605-100">605 - 100mm</option>
+                        <option value="605-200">605 - 200mm</option>
+                        <option value="605-300">605 - 300mm</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary">Enviar Solicitação</button>
+            </form>
+        </div>
+
+        <!-- PAINEL OPERACIONAL (HYSTER) -->
+        <div class="card">
+            <h2>🚜 Atendimento (Hyster)</h2>
+            <div class="form-group">
+                <label for="operadorHyster">Identificação do Operador Hyster</label>
+                <input type="text" id="operadorHyster" placeholder="Ex: Hyster 01" value="Hyster 01">
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b;">Ações rápidas para os operadores assumirem os pedidos.</p>
+            <div id="listaAtendimento"></div>
+        </div>
+    </div>
+
+    <br>
+
+    <!-- TABELA / HISTÓRICO DE PEDIDOS -->
+    <div class="container">
+        <div class="card" style="min-width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>📊 Dashboard de Acompanhamento de Pedidos</h2>
+                <button class="btn-clear" onclick="limparHistorico()">Limpar Histórico</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th># Pedido</th>
+                        <th>Equipamento</th>
+                        <th>Insumo</th>
+                        <th>Medida</th>
+                        <th>Diâmetro</th>
+                        <th>Status</th>
+                        <th>Hyster Resp.</th>
+                        <th>Tempo de Espera</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPedidos"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let pedidos = JSON.parse(localStorage.getItem('pedidos_hyster')) || [];
+
+        // Função que ativa/desativa os campos conforme o insumo selecionado
+        function gerenciarCamposCamposDinamicos() {
+            const insumo = document.getElementById('insumo').value;
+            const campoMedida = document.getElementById('medida');
+            const campoDiametro = document.getElementById('diametro');
+
+            if (insumo === "PAPEL") {
+                // Habilita Medida e desabilita Diâmetro
+                campoMedida.disabled = false;
+                campoDiametro.disabled = true;
+                campoDiametro.value = "N/A";
+            } else if (insumo === "LUVA") {
+                // Habilita Diâmetro e desabilita Medida
+                campoMedida.disabled = true;
+                campoMedida.value = "N/A";
+                campoDiametro.disabled = false;
+            } else {
+                // Desabilita ambos para outros insumos
+                campoMedida.disabled = true;
+                campoMedida.value = "N/A";
+                campoDiametro.disabled = true;
+                campoDiametro.value = "N/A";
+            }
+        }
+
+        // Registrar novo pedido
+        document.getElementById('formPedido').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const novoPedido = {
+                id: pedidos.length + 1,
+                equipamento: document.getElementById('equipamento').value,
+                insumo: document.getElementById('insumo').value,
+                medida: document.getElementById('medida').value,
+                diametro: document.getElementById('diametro').value,
+                status: 'PENDENTE',
+                hyster: '-',
+                timestamp: new Date().getTime()
+            };
+
+            pedidos.push(novoPedido);
+            salvarERenderizar();
+            this.reset();
+            gerenciarCamposCamposDinamicos(); // Reseta o estado dos campos para desabilitado após envio
+        });
+
+        // Alterar status do pedido (Aceitar ou Concluir)
+        function alterarStatus(id, novoStatus) {
+            const operador = document.getElementById('operadorHyster').value || "Hyster N/A";
+            const pedido = pedidos.find(p => p.id === id);
+            
+            if (pedido) {
+                pedido.status = novoStatus;
+                if (novoStatus === 'EM ATENDIMENTO') {
+                    pedido.hyster = operador;
+                }
+                salvarERenderizar();
+            }
+        }
+
+        function limparHistorico() {
+            if (confirm("Deseja realmente apagar todo o histórico de solicitações?")) {
+                pedidos = [];
+                salvarERenderizar();
+            }
+        }
+
+        function salvarERenderizar() {
+            localStorage.setItem('pedidos_hyster', JSON.stringify(pedidos));
+            renderizarTabela();
+            renderizarPainelAtendimento();
+        }
+
+        // Calcula o tempo decorrido e retorna a classe CSS para a cor (Alerta/Kanban)
+        function calcularTempoEspera(timestamp, status) {
+            if (status === 'OK') return { texto: 'Concluído', classe: 'tempo-normal' };
+
+            const agora = new Date().getTime();
+            const minutos = Math.floor((agora - timestamp) / 60000);
+
+            if (minutos < 5) {
+                return { texto: `${minutos} min`, classe: 'tempo-normal' };
+            } else if (minutos < 10) {
+                return { texto: `${minutos} min (Atenção)`, classe: 'tempo-atencao' };
+            } else {
+                return { texto: `${minutos} min (Crítico)`, classe: 'tempo-critico' };
+            }
+        }
+
+        // Renderiza a tabela principal de acompanhamento
+        function renderizarTabela() {
+            const tbody = document.getElementById('tabelaPedidos');
+            tbody.innerHTML = '';
+
+            pedidos.forEach(p => {
+                const infoTempo = calcularTempoEspera(p.timestamp, p.status);
+                let badgeClass = p.status === 'PENDENTE' ? 'status-pendente' : (p.status === 'EM ATENDIMENTO' ? 'status-atendimento' : 'status-ok');
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>#${p.id}</b></td>
+                    <td>${p.equipamento}</td>
+                    <td>${p.insumo}</td>
+                    <td>${p.medida}</td>
+                    <td>${p.diametro}</td>
+                    <td><span class="badge-status ${badgeClass}">${p.status}</span></td>
+                    <td><b>${p.hyster}</b></td>
+                    <td><span class="${infoTempo.classe}">${infoTempo.texto}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Renderiza o painel operacional para uso direto dos operadores da Hyster
+        function renderizarPainelAtendimento() {
+            const container = document.getElementById('listaAtendimento');
+            container.innerHTML = '';
+
+            const pedidosAtivos = pedidos.filter(p => p.status !== 'OK');
+
+            if (pedidosAtivos.length === 0) {
+                container.innerHTML = '<p style="color: #64748b;">Nenhuma solicitação pendente no momento.</p>';
+                return;
+            }
+
+            pedidosAtivos.forEach(p => {
+                const div = document.createElement('div');
+                div.style.cssText = "border: 1px solid #e2e8f0; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #fafafa;";
+                
+                let acaoBotao = '';
+                if (p.status === 'PENDENTE') {
+                    acaoBotao = `<button class="btn-accept" onclick="alterarStatus(${p.id}, 'EM ATENDIMENTO')">Aceitar Pedido</button>`;
+                } else if (p.status === 'EM ATENDIMENTO') {
+                    acaoBotao = `<button class="btn-complete" onclick="alterarStatus(${p.id}, 'OK')">Marcar como Concluído</button>`;
+                }
+
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong>#${p.id} - ${p.equipamento}</strong>: ${p.insumo} <br>
+                            <small>Medida: ${p.medida} | Diâmetro: ${p.diametro}</small>
+                        </div>
+                        <div>${acaoBotao}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Atualiza os temporizadores a cada 30 segundos
+        setInterval(() => {
+            renderizarTabela();
+        }, 30000);
+
+        // Renderização inicial
+        renderizarTabela();
+        renderizarPainelAtendimento();
+    </script>
+</body>
+</html>
