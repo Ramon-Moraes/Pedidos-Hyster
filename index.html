@@ -7,12 +7,25 @@
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-        h1 { text-align: center; color: #1e293b; margin-bottom: 20px; }
         
-        .container { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        /* Cabeçalho e Barra Superior */
+        .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto 20px auto; }
+        h1 { color: #1e293b; margin: 0; font-size: 1.8rem; }
+        .user-info { display: flex; align-items: center; gap: 15px; background: #ffffff; padding: 8px 16px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-logout { background-color: #64748b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
+        .btn-logout:hover { background-color: #475569; }
+
+        /* Estilo do Card de Login */
+        #screenLogin { display: flex; justify-content: center; align-items: center; min-height: 80vh; }
+        .login-card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .login-card h2 { text-align: center; border-bottom: none; margin-bottom: 20px; color: #1e293b; }
+        .error-message { color: #dc2626; background: #fee2e2; padding: 8px; border-radius: 4px; font-size: 0.85rem; margin-bottom: 12px; text-align: center; display: none; }
+
+        /* Container Principal */
+        .container { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1400px; margin: 0 auto; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 320px; }
         
-        h2 { border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; font-size: 1.2rem; color: #0f172a; }
+        h2 { border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; font-size: 1.2rem; color: #0f172a; margin-top: 0; }
         
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
@@ -22,244 +35,229 @@
         button { cursor: pointer; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; transition: 0.2s; }
         .btn-primary { background-color: #2563eb; color: white; width: 100%; font-size: 1rem; margin-top: 10px; }
         .btn-primary:hover { background-color: #1d4ed8; }
-        .btn-accept { background-color: #eab308; color: white; }
+        .btn-accept { background-color: #eab308; color: white; padding: 6px 10px; font-size: 0.8rem; border-radius: 4px; }
         .btn-accept:hover { background-color: #ca8a04; }
-        .btn-complete { background-color: #16a34a; color: white; }
+        .btn-complete { background-color: #16a34a; color: white; padding: 6px 10px; font-size: 0.8rem; border-radius: 4px; }
         .btn-complete:hover { background-color: #15803d; }
-        .btn-clear { background-color: #ef4444; color: white; margin-top: 10px; }
+        .btn-clear { background-color: #ef4444; color: white; }
+        .btn-clear:hover { background-color: #dc2626; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.88rem; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; vertical-align: middle; }
         th { background-color: #f8fafc; color: #475569; }
         
         /* Cores de Alerta por Tempo de Espera */
-        .tempo-normal { background-color: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
-        .tempo-atencao { background-color: #fef08a; color: #854d0e; padding: 3px 8px; border-radius: 4px; font-weight: bold; } /* > 5 min */
-        .tempo-critico { background-color: #fecaca; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-weight: bold; } /* > 10 min */
+        .tempo-normal { background-color: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .tempo-atencao { background-color: #fef08a; color: #854d0e; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .tempo-critico { background-color: #fecaca; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
         
         .badge-status { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; text-transform: uppercase; }
         .status-pendente { background-color: #fee2e2; color: #991b1b; }
         .status-atendimento { background-color: #fef3c7; color: #92400e; }
         .status-ok { background-color: #d1fae5; color: #065f46; }
+
+        /* Ajustes de visibilidade */
+        .hidden { display: none !important; }
+        .full-width { flex: 1 1 100% !important; min-width: 100% !important; }
     </style>
+
+    <!-- CARREGAMENTO COMPATÍVEL DO FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
-    <h1>🚚 Controle de Insumos - HYSTER</h1>
-
-    <div class="container">
-        <!-- FORMULÁRIO DE SOLICITAÇÃO (TL) -->
-        <div class="card">
-            <h2>📝 Solicitação de Insumo (TL)</h2>
-            <form id="formPedido">
+    <!-- TELA DE LOGIN -->
+    <div id="screenLogin">
+        <div class="login-card">
+            <h2>🔑 Acesso ao Sistema</h2>
+            <div id="loginError" class="error-message">Usuário ou senha incorretos!</div>
+            <form id="formLogin">
                 <div class="form-group">
-                    <label for="equipamento">Equipamento / Linha</label>
-                    <select id="equipamento" required>
-                        <option value="">Selecione O Equipamento</option>
-                        <option value="TL1">TL1</option>
-                        <option value="TL5">TL5</option>
-                        <option value="TL6">TL6</option>
-                        <option value="TL9">TL9</option>
-                        <option value="AP2">AP2</option>
-                        <option value="EB3">EB3</option>
-                    </select>
+                    <label for="username">Usuário</label>
+                    <input type="text" id="username" required placeholder="Digite seu usuário">
                 </div>
-
                 <div class="form-group">
-                    <label for="insumo">Insumo</label>
-                    <select id="insumo" required onchange="gerenciarCamposCamposDinamicos()">
-                        <option value="">Selecione...</option>
-                        <option value="CINTA VERDE CINTAR">CINTA VERDE CINTAR</option>
-                        <option value="PAPEL">PAPEL</option>
-                        <option value="LUVA">LUVA</option>
-                        <option value="SELO 19MM">SELO 19MM</option>
-                        <option value="PAPELÃO">PAPELÃO</option>
-                    </select>
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" required placeholder="Digite sua senha">
                 </div>
-
-                <div class="form-group">
-                    <label for="medida">Medida do Papel</label>
-                    <select id="medida" disabled>
-                        <option value="N/A">N/A (Disponível apenas para Papel)</option>
-                        <option value="100 mm">100 mm</option>
-                        <option value="150 mm">150 mm</option>
-                        <option value="180 mm">180 mm</option>
-                        <option value="210 mm">210 mm</option>
-                        <option value="250 mm">250 mm</option>
-                        <option value="280 mm">280 mm</option>
-                        <option value="310 mm">310 mm</option>
-                        <option value="350 mm">350 mm</option>
-                        <option value="380 mm">380 mm</option>
-                        <option value="410 mm">410 mm</option>
-                        <option value="450 mm">450 mm</option>
-                        <option value="480 mm">480 mm</option>
-                        <option value="510 mm">510 mm</option>
-                        <option value="540 mm">540 mm</option>
-                        <option value="570 mm">570 mm</option>
-                        <option value="590 mm">590 mm</option>
-                        <option value="600 mm">600 mm</option>
-                        <option value="620 mm">620 mm</option>
-                        <option value="635 mm">635 mm</option>
-                        <option value="650 mm">650 mm</option>
-                        <option value="680 mm">680 mm</option>
-                        <option value="700 mm">700 mm</option>
-                        <option value="740 mm">740 mm</option>
-                        <option value="780 mm">780 mm</option>
-                        <option value="800 mm">800 mm</option>
-                        <option value="825 mm">825 mm</option>
-                        <option value="840 mm">840 mm</option>
-                        <option value="870 mm">870 mm</option>
-                        <option value="900 mm">900 mm</option>
-                        <option value="930 mm">930 mm</option>
-                        <option value="990 mm">990 mm</option>
-                        <option value="1030 mm">1030 mm</option>
-                        <option value="1050 mm">1050 mm</option>
-                        <option value="1190 mm">1190 mm</option>
-                        <option value="1240 mm">1240 mm</option>
-                        <option value="1270 mm">1270 mm</option>
-                        <option value="1290 mm">1290 mm</option>
-                        <option value="1300 mm">1300 mm</option>
-                        <option value="1500 mm">1500 mm</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="diametro">Diâmetro da Luva</label>
-                    <select id="diametro" disabled>
-                        <option value="N/A">N/A (Disponível apenas para Luva)</option>
-                        <option value="503-200">503 - 200mm</option>
-                        <option value="503-300">503 - 300mm</option>
-                        <option value="602-200">602 - 200mm</option>
-                        <option value="602-300">602 - 300mm</option>
-                        <option value="605-100">605 - 100mm</option>
-                        <option value="605-200">605 - 200mm</option>
-                        <option value="605-300">605 - 300mm</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="btn-primary">Enviar Solicitação</button>
+                <button type="submit" class="btn-primary">Entrar</button>
             </form>
         </div>
+    </div>
 
-        <!-- PAINEL OPERACIONAL (HYSTER) -->
-        <div class="card">
-            <h2>🚜 Atendimento (Hyster)</h2>
-            <div class="form-group">
-                <label for="operadorHyster">Identificação do Operador Hyster</label>
-                <input type="text" id="operadorHyster" placeholder="Ex: Hyster 01" value="Hyster 01">
+    <!-- TELA PRINCIPAL (SISTEMA) -->
+    <div id="screenApp" class="hidden">
+        
+        <div class="header-bar">
+            <h1>🚚 Controle de Insumos - HYSTER</h1>
+            <div class="user-info">
+                <span>Usuário: <b id="lblUsuario"></b></span>
+                <button class="btn-logout" id="btnLogout">Sair</button>
             </div>
-            <p style="font-size: 0.85rem; color: #64748b;">Ações rápidas para os operadores assumirem os pedidos.</p>
-            <div id="listaAtendimento"></div>
+        </div>
+
+        <div class="container">
+            <!-- FORMULÁRIO DE SOLICITAÇÃO -->
+            <div class="card full-width" id="cardSolicitacao">
+                <h2>📝 Solicitação de Insumo (TL)</h2>
+                <form id="formPedido">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label for="equipamento">Equipamento / Linha</label>
+                            <select id="equipamento" required>
+                                <option value="">Selecione O Equipamento</option>
+                                <option value="TL1">TL1</option>
+                                <option value="TL5">TL5</option>
+                                <option value="TL6">TL6</option>
+                                <option value="TL9">TL9</option>
+                                <option value="AP2">AP2</option>
+                                <option value="EB3">EB3</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label for="insumo">Insumo</label>
+                            <select id="insumo" required>
+                                <option value="">Selecione...</option>
+                                <option value="CINTA VERDE CINTAR">CINTA VERDE CINTAR</option>
+                                <option value="PAPEL">PAPEL</option>
+                                <option value="LUVA">LUVA</option>
+                                <option value="SELO 19MM">SELO 19MM</option>
+                                <option value="PAPELÃO">PAPELÃO</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="flex: 1; min-width: 150px;">
+                            <label for="quantidade">Quantidade</label>
+                            <input type="number" id="quantidade" min="1" value="1" required placeholder="Qtd">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label for="medida">Medida do Papel</label>
+                            <select id="medida" disabled>
+                                <option value="N/A">N/A (Disponível apenas para Papel)</option>
+                                <option value="100 mm">100 mm</option>
+                                <option value="150 mm">150 mm</option>
+                                <option value="180 mm">180 mm</option>
+                                <option value="210 mm">210 mm</option>
+                                <option value="250 mm">250 mm</option>
+                                <option value="280 mm">280 mm</option>
+                                <option value="310 mm">310 mm</option>
+                                <option value="350 mm">350 mm</option>
+                                <option value="380 mm">380 mm</option>
+                                <option value="410 mm">410 mm</option>
+                                <option value="450 mm">450 mm</option>
+                                <option value="480 mm">480 mm</option>
+                                <option value="510 mm">510 mm</option>
+                                <option value="540 mm">540 mm</option>
+                                <option value="570 mm">570 mm</option>
+                                <option value="590 mm">590 mm</option>
+                                <option value="600 mm">600 mm</option>
+                                <option value="620 mm">620 mm</option>
+                                <option value="635 mm">635 mm</option>
+                                <option value="650 mm">650 mm</option>
+                                <option value="680 mm">680 mm</option>
+                                <option value="700 mm">700 mm</option>
+                                <option value="740 mm">740 mm</option>
+                                <option value="780 mm">780 mm</option>
+                                <option value="800 mm">800 mm</option>
+                                <option value="825 mm">825 mm</option>
+                                <option value="840 mm">840 mm</option>
+                                <option value="870 mm">870 mm</option>
+                                <option value="900 mm">900 mm</option>
+                                <option value="930 mm">930 mm</option>
+                                <option value="990 mm">990 mm</option>
+                                <option value="1030 mm">1030 mm</option>
+                                <option value="1050 mm">1050 mm</option>
+                                <option value="1190 mm">1190 mm</option>
+                                <option value="1240 mm">1240 mm</option>
+                                <option value="1270 mm">1270 mm</option>
+                                <option value="1290 mm">1290 mm</option>
+                                <option value="1300 mm">1300 mm</option>
+                                <option value="1500 mm">1500 mm</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label for="diametro">Diâmetro da Luva</label>
+                            <select id="diametro" disabled>
+                                <option value="N/A">N/A (Disponível apenas para Luva)</option>
+                                <option value="503-200">503 - 200mm</option>
+                                <option value="503-300">503 - 300mm</option>
+                                <option value="602-200">602 - 200mm</option>
+                                <option value="602-300">602 - 300mm</option>
+                                <option value="605-100">605 - 100mm</option>
+                                <option value="605-200">605 - 200mm</option>
+                                <option value="605-300">605 - 300mm</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Enviar Solicitação</button>
+                </form>
+            </div>
+        </div>
+
+        <br>
+
+        <!-- DASHBOARD DE ACOMPANHAMENTO -->
+        <div class="container">
+            <div class="card full-width" id="cardDashboard">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <h2>📊 Dashboard de Acompanhamento de Pedidos</h2>
+                    
+                    <div id="boxOperadorHyster" style="display: flex; align-items: center; gap: 10px;">
+                        <label for="operadorHyster" style="margin:0; white-space: nowrap;">Operador Hyster:</label>
+                        <input type="text" id="operadorHyster" placeholder="Ex: Hyster 01" value="Hyster 01" style="width: 150px; padding: 6px;">
+                    </div>
+
+                    <button class="btn-clear" id="btnLimpar">Limpar Histórico</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th># Pedido</th>
+                            <th>Equipamento</th>
+                            <th>Insumo</th>
+                            <th>Qtd</th>
+                            <th>Medida</th>
+                            <th>Diâmetro</th>
+                            <th>Status / Ação</th>
+                            <th>Hyster Resp.</th>
+                            <th>Tempo de Espera</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaPedidos"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <br>
-
-    <!-- TABELA / HISTÓRICO DE PEDIDOS -->
-    <div class="container">
-        <div class="card" style="min-width: 100%;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>📊 Dashboard de Acompanhamento de Pedidos</h2>
-                <button class="btn-clear" onclick="limparHistorico()">Limpar Histórico</button>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th># Pedido</th>
-                        <th>Equipamento</th>
-                        <th>Insumo</th>
-                        <th>Medida</th>
-                        <th>Diâmetro</th>
-                        <th>Status</th>
-                        <th>Hyster Resp.</th>
-                        <th>Tempo de Espera</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaPedidos"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- MÓDULOS DO FIREBASE -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        // ⚠️ IMPORTANTE: Substitua os dados abaixo com os dados do seu Firebase Console
+    <script>
+        // ⚠️ COLE AS CHAVES DO SEU PROJETO OBTIDAS NO FIREBASE CONSOLE AQUI
         const firebaseConfig = {
-  		apiKey: "AIzaSyCIm2afTptP6C7AEpYp5-6GW1MAuWgzCaw",
-  		authDomain: "hyster-controle-pedidos.firebaseapp.com",
-  		databaseURL: "https://hyster-controle-pedidos-default-rtdb.firebaseio.com",
-  		projectId: "hyster-controle-pedidos",
-  		storageBucket: "hyster-controle-pedidos.firebasestorage.app",
-  		messagingSenderId: "759311516767",
-  		appId: "1:759311516767:web:2c48a37f886e3e21b287ea"
-	};
-        // Inicializa o Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const pedidosRef = ref(db, 'pedidos');
+  apiKey: "AIzaSyCIm2afTptP6C7AEpYp5-6GW1MAuWgzCaw",
+  authDomain: "hyster-controle-pedidos.firebaseapp.com",
+  databaseURL: "https://hyster-controle-pedidos-default-rtdb.firebaseio.com",
+  projectId: "hyster-controle-pedidos",
+  storageBucket: "hyster-controle-pedidos.firebasestorage.app",
+  messagingSenderId: "759311516767",
+  appId: "1:759311516767:web:2c48a37f886e3e21b287ea"
+};
+
+        // Inicialização
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const pedidosRef = db.ref('pedidos');
 
         let pedidos = [];
+        let usuarioAtual = '';
 
-        // Escuta alterações no Firebase em tempo real (Sincroniza todas as telas conectadas)
-        onValue(pedidosRef, (snapshot) => {
-            const data = snapshot.val();
-            pedidos = [];
-            if (data) {
-                Object.keys(data).forEach((key, index) => {
-                    pedidos.push({
-                        key: key,
-                        id: index + 1,
-                        ...data[key]
-                    });
-                });
-            }
-            renderizarTabela();
-            renderizarPainelAtendimento();
-        });
-
-        // Registrar novo pedido no Firebase
-        document.getElementById('formPedido').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const novoPedido = {
-                equipamento: document.getElementById('equipamento').value,
-                insumo: document.getElementById('insumo').value,
-                medida: document.getElementById('medida').value,
-                diametro: document.getElementById('diametro').value,
-                status: 'PENDENTE',
-                hyster: '-',
-                timestamp: new Date().getTime()
-            };
-
-            push(pedidosRef, novoPedido);
-            this.reset();
-            window.gerenciarCamposCamposDinamicos();
-        });
-
-        // Alterar status do pedido
-        window.alterarStatus = function(key, novoStatus) {
-            const operador = document.getElementById('operadorHyster').value || "Hyster N/A";
-            const pedidoRef = ref(db, `pedidos/${key}`);
-            
-            let dadosAtualizados = { status: novoStatus };
-            if (novoStatus === 'EM ATENDIMENTO') {
-                dadosAtualizados.hyster = operador;
-            }
-
-            update(pedidoRef, dadosAtualizados);
-        };
-
-        // Limpar histórico no Firebase
-        window.limparHistorico = function() {
-            if (confirm("Deseja realmente apagar todo o histórico de solicitações da nuvem?")) {
-                remove(pedidosRef);
-            }
-        };
-
-        // Torna a função global para uso inline nos selects
-        window.gerenciarCamposCamposDinamicos = function() {
+        // Controle de campos dinâmicos
+        function gerenciarCamposDinamicos() {
             const insumo = document.getElementById('insumo').value;
             const campoMedida = document.getElementById('medida');
             const campoDiametro = document.getElementById('diametro');
@@ -278,7 +276,111 @@
                 campoDiametro.disabled = true;
                 campoDiametro.value = "N/A";
             }
+        }
+
+        document.getElementById('insumo').addEventListener('change', gerenciarCamposDinamicos);
+
+        // Login
+        document.getElementById('formLogin').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim().toLowerCase();
+            const pass = document.getElementById('password').value.trim().toLowerCase();
+            const errDiv = document.getElementById('loginError');
+
+            if (user === 'solicitante' && pass === 'solicitante') {
+                iniciarSessao('solicitante');
+            } else if (user === 'hyster' && pass === 'hyster') {
+                iniciarSessao('hyster');
+            } else {
+                errDiv.style.display = 'block';
+            }
+        });
+
+        function iniciarSessao(tipoUsuario) {
+            usuarioAtual = tipoUsuario;
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('screenLogin').classList.add('hidden');
+            document.getElementById('screenApp').classList.remove('hidden');
+            document.getElementById('lblUsuario').innerText = tipoUsuario.toUpperCase();
+
+            const cardSolicitacao = document.getElementById('cardSolicitacao');
+            const boxOperador = document.getElementById('boxOperadorHyster');
+
+            if (tipoUsuario === 'hyster') {
+                cardSolicitacao.classList.add('hidden');
+                boxOperador.style.display = 'flex';
+            } else {
+                cardSolicitacao.classList.remove('hidden');
+                boxOperador.style.display = 'none';
+            }
+            renderizarTabela();
+        }
+
+        document.getElementById('btnLogout').addEventListener('click', function() {
+            document.getElementById('formLogin').reset();
+            document.getElementById('screenApp').classList.add('hidden');
+            document.getElementById('screenLogin').classList.remove('hidden');
+        });
+
+        // Escuta em tempo real do Firebase
+        pedidosRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            pedidos = [];
+            if (data) {
+                Object.keys(data).forEach((key, index) => {
+                    pedidos.push({
+                        key: key,
+                        id: index + 1,
+                        ...data[key]
+                    });
+                });
+            }
+            renderizarTabela();
+        });
+
+        // Envio do formulário de pedido
+        document.getElementById('formPedido').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const novoPedido = {
+                equipamento: document.getElementById('equipamento').value,
+                insumo: document.getElementById('insumo').value,
+                quantidade: document.getElementById('quantidade').value || 1,
+                medida: document.getElementById('medida').value,
+                diametro: document.getElementById('diametro').value,
+                status: 'PENDENTE',
+                hyster: '-',
+                timestamp: new Date().getTime()
+            };
+
+            pedidosRef.push(novoPedido).then(() => {
+                document.getElementById('formPedido').reset();
+                document.getElementById('quantidade').value = 1;
+                gerenciarCamposDinamicos();
+            }).catch((error) => {
+                alert("Erro ao enviar pedido: " + error.message);
+            });
+        });
+
+        // Alteração de Status do Pedido
+        window.alterarStatus = function(key, novoStatus) {
+            const operador = document.getElementById('operadorHyster').value || "Hyster N/A";
+            const itemRef = db.ref(`pedidos/${key}`);
+            
+            let dadosAtualizados = { status: novoStatus };
+            if (novoStatus === 'EM ATENDIMENTO') {
+                dadosAtualizados.hyster = operador;
+            }
+
+            itemRef.update(dadosAtualizados);
         };
+
+        // Limpar histórico
+        document.getElementById('btnLimpar').addEventListener('click', function() {
+            if (confirm("Deseja realmente apagar todo o histórico de solicitações da nuvem?")) {
+                pedidosRef.remove();
+            }
+        });
 
         function calcularTempoEspera(timestamp, status) {
             if (status === 'OK') return { texto: 'Concluído', classe: 'tempo-normal' };
@@ -303,14 +405,27 @@
                 const infoTempo = calcularTempoEspera(p.timestamp, p.status);
                 let badgeClass = p.status === 'PENDENTE' ? 'status-pendente' : (p.status === 'EM ATENDIMENTO' ? 'status-atendimento' : 'status-ok');
 
+                // Coluna de Status / Ações
+                let celulaStatus = `<span class="badge-status ${badgeClass}">${p.status}</span>`;
+
+                // Se o usuário logado for HYSTER, habilita os botões diretamente no Dashboard
+                if (usuarioAtual === 'hyster') {
+                    if (p.status === 'PENDENTE') {
+                        celulaStatus += `<br><button class="btn-accept" style="margin-top:5px;" onclick="alterarStatus('${p.key}', 'EM ATENDIMENTO')">Aceitar Pedido</button>`;
+                    } else if (p.status === 'EM ATENDIMENTO') {
+                        celulaStatus += `<br><button class="btn-complete" style="margin-top:5px;" onclick="alterarStatus('${p.key}', 'OK')">Concluir</button>`;
+                    }
+                }
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><b>#${p.id}</b></td>
                     <td>${p.equipamento}</td>
                     <td>${p.insumo}</td>
+                    <td><b>${p.quantidade || 1}</b></td>
                     <td>${p.medida}</td>
                     <td>${p.diametro}</td>
-                    <td><span class="badge-status ${badgeClass}">${p.status}</span></td>
+                    <td>${celulaStatus}</td>
                     <td><b>${p.hyster}</b></td>
                     <td><span class="${infoTempo.classe}">${infoTempo.texto}</span></td>
                 `;
@@ -318,42 +433,6 @@
             });
         }
 
-        function renderizarPainelAtendimento() {
-            const container = document.getElementById('listaAtendimento');
-            container.innerHTML = '';
-
-            const pedidosAtivos = pedidos.filter(p => p.status !== 'OK');
-
-            if (pedidosAtivos.length === 0) {
-                container.innerHTML = '<p style="color: #64748b;">Nenhuma solicitação pendente no momento.</p>';
-                return;
-            }
-
-            pedidosAtivos.forEach(p => {
-                const div = document.createElement('div');
-                div.style.cssText = "border: 1px solid #e2e8f0; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #fafafa;";
-                
-                let acaoBotao = '';
-                if (p.status === 'PENDENTE') {
-                    acaoBotao = `<button class="btn-accept" onclick="alterarStatus('${p.key}', 'EM ATENDIMENTO')">Aceitar Pedido</button>`;
-                } else if (p.status === 'EM ATENDIMENTO') {
-                    acaoBotao = `<button class="btn-complete" onclick="alterarStatus('${p.key}', 'OK')">Marcar como Concluído</button>`;
-                }
-
-                div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <strong>#${p.id} - ${p.equipamento}</strong>: ${p.insumo} <br>
-                            <small>Medida: ${p.medida} | Diâmetro: ${p.diametro}</small>
-                        </div>
-                        <div>${acaoBotao}</div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // Atualiza temporizadores a cada 30 segundos
         setInterval(() => {
             renderizarTabela();
         }, 30000);
