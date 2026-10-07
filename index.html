@@ -128,7 +128,6 @@
                     <select id="diametro" disabled>
                         <option value="N/A">N/A (Disponível apenas para Luva)</option>
                         <option value="503-200">503 - 200mm</option>
-                        <option value="503-200">503 - 200mm</option>
                         <option value="503-300">503 - 300mm</option>
                         <option value="602-200">602 - 200mm</option>
                         <option value="602-300">602 - 300mm</option>
@@ -181,40 +180,50 @@
         </div>
     </div>
 
-    <script>
-        let pedidos = JSON.parse(localStorage.getItem('pedidos_hyster')) || [];
+    <!-- MÓDULOS DO FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Função que ativa/desativa os campos conforme o insumo selecionado
-        function gerenciarCamposCamposDinamicos() {
-            const insumo = document.getElementById('insumo').value;
-            const campoMedida = document.getElementById('medida');
-            const campoDiametro = document.getElementById('diametro');
+        // ⚠️ IMPORTANTE: Substitua os dados abaixo com os dados do seu Firebase Console
+        const firebaseConfig = {
+  		apiKey: "AIzaSyCIm2afTptP6C7AEpYp5-6GW1MAuWgzCaw",
+  		authDomain: "hyster-controle-pedidos.firebaseapp.com",
+  		databaseURL: "https://hyster-controle-pedidos-default-rtdb.firebaseio.com",
+  		projectId: "hyster-controle-pedidos",
+  		storageBucket: "hyster-controle-pedidos.firebasestorage.app",
+  		messagingSenderId: "759311516767",
+  		appId: "1:759311516767:web:2c48a37f886e3e21b287ea"
+	};
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const pedidosRef = ref(db, 'pedidos');
 
-            if (insumo === "PAPEL") {
-                // Habilita Medida e desabilita Diâmetro
-                campoMedida.disabled = false;
-                campoDiametro.disabled = true;
-                campoDiametro.value = "N/A";
-            } else if (insumo === "LUVA") {
-                // Habilita Diâmetro e desabilita Medida
-                campoMedida.disabled = true;
-                campoMedida.value = "N/A";
-                campoDiametro.disabled = false;
-            } else {
-                // Desabilita ambos para outros insumos
-                campoMedida.disabled = true;
-                campoMedida.value = "N/A";
-                campoDiametro.disabled = true;
-                campoDiametro.value = "N/A";
+        let pedidos = [];
+
+        // Escuta alterações no Firebase em tempo real (Sincroniza todas as telas conectadas)
+        onValue(pedidosRef, (snapshot) => {
+            const data = snapshot.val();
+            pedidos = [];
+            if (data) {
+                Object.keys(data).forEach((key, index) => {
+                    pedidos.push({
+                        key: key,
+                        id: index + 1,
+                        ...data[key]
+                    });
+                });
             }
-        }
+            renderizarTabela();
+            renderizarPainelAtendimento();
+        });
 
-        // Registrar novo pedido
+        // Registrar novo pedido no Firebase
         document.getElementById('formPedido').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const novoPedido = {
-                id: pedidos.length + 1,
                 equipamento: document.getElementById('equipamento').value,
                 insumo: document.getElementById('insumo').value,
                 medida: document.getElementById('medida').value,
@@ -224,40 +233,53 @@
                 timestamp: new Date().getTime()
             };
 
-            pedidos.push(novoPedido);
-            salvarERenderizar();
+            push(pedidosRef, novoPedido);
             this.reset();
-            gerenciarCamposCamposDinamicos(); // Reseta o estado dos campos para desabilitado após envio
+            window.gerenciarCamposCamposDinamicos();
         });
 
-        // Alterar status do pedido (Aceitar ou Concluir)
-        function alterarStatus(id, novoStatus) {
+        // Alterar status do pedido
+        window.alterarStatus = function(key, novoStatus) {
             const operador = document.getElementById('operadorHyster').value || "Hyster N/A";
-            const pedido = pedidos.find(p => p.id === id);
+            const pedidoRef = ref(db, `pedidos/${key}`);
             
-            if (pedido) {
-                pedido.status = novoStatus;
-                if (novoStatus === 'EM ATENDIMENTO') {
-                    pedido.hyster = operador;
-                }
-                salvarERenderizar();
+            let dadosAtualizados = { status: novoStatus };
+            if (novoStatus === 'EM ATENDIMENTO') {
+                dadosAtualizados.hyster = operador;
             }
-        }
 
-        function limparHistorico() {
-            if (confirm("Deseja realmente apagar todo o histórico de solicitações?")) {
-                pedidos = [];
-                salvarERenderizar();
+            update(pedidoRef, dadosAtualizados);
+        };
+
+        // Limpar histórico no Firebase
+        window.limparHistorico = function() {
+            if (confirm("Deseja realmente apagar todo o histórico de solicitações da nuvem?")) {
+                remove(pedidosRef);
             }
-        }
+        };
 
-        function salvarERenderizar() {
-            localStorage.setItem('pedidos_hyster', JSON.stringify(pedidos));
-            renderizarTabela();
-            renderizarPainelAtendimento();
-        }
+        // Torna a função global para uso inline nos selects
+        window.gerenciarCamposCamposDinamicos = function() {
+            const insumo = document.getElementById('insumo').value;
+            const campoMedida = document.getElementById('medida');
+            const campoDiametro = document.getElementById('diametro');
 
-        // Calcula o tempo decorrido e retorna a classe CSS para a cor (Alerta/Kanban)
+            if (insumo === "PAPEL") {
+                campoMedida.disabled = false;
+                campoDiametro.disabled = true;
+                campoDiametro.value = "N/A";
+            } else if (insumo === "LUVA") {
+                campoMedida.disabled = true;
+                campoMedida.value = "N/A";
+                campoDiametro.disabled = false;
+            } else {
+                campoMedida.disabled = true;
+                campoMedida.value = "N/A";
+                campoDiametro.disabled = true;
+                campoDiametro.value = "N/A";
+            }
+        };
+
         function calcularTempoEspera(timestamp, status) {
             if (status === 'OK') return { texto: 'Concluído', classe: 'tempo-normal' };
 
@@ -273,7 +295,6 @@
             }
         }
 
-        // Renderiza a tabela principal de acompanhamento
         function renderizarTabela() {
             const tbody = document.getElementById('tabelaPedidos');
             tbody.innerHTML = '';
@@ -297,7 +318,6 @@
             });
         }
 
-        // Renderiza o painel operacional para uso direto dos operadores da Hyster
         function renderizarPainelAtendimento() {
             const container = document.getElementById('listaAtendimento');
             container.innerHTML = '';
@@ -315,9 +335,9 @@
                 
                 let acaoBotao = '';
                 if (p.status === 'PENDENTE') {
-                    acaoBotao = `<button class="btn-accept" onclick="alterarStatus(${p.id}, 'EM ATENDIMENTO')">Aceitar Pedido</button>`;
+                    acaoBotao = `<button class="btn-accept" onclick="alterarStatus('${p.key}', 'EM ATENDIMENTO')">Aceitar Pedido</button>`;
                 } else if (p.status === 'EM ATENDIMENTO') {
-                    acaoBotao = `<button class="btn-complete" onclick="alterarStatus(${p.id}, 'OK')">Marcar como Concluído</button>`;
+                    acaoBotao = `<button class="btn-complete" onclick="alterarStatus('${p.key}', 'OK')">Marcar como Concluído</button>`;
                 }
 
                 div.innerHTML = `
@@ -333,14 +353,10 @@
             });
         }
 
-        // Atualiza os temporizadores a cada 30 segundos
+        // Atualiza temporizadores a cada 30 segundos
         setInterval(() => {
             renderizarTabela();
         }, 30000);
-
-        // Renderização inicial
-        renderizarTabela();
-        renderizarPainelAtendimento();
     </script>
 </body>
 </html>
